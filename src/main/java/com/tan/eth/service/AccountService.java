@@ -1,11 +1,16 @@
 package com.tan.eth.service;
 
 
+import com.alibaba.fastjson.JSONObject;
+import com.tan.eth.entity.Account;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
 
 import java.io.IOException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.List;
 
 /**
@@ -17,17 +22,10 @@ public interface AccountService {
 
     /**
      * 创建账户
-     * @param pswd
      * @return
      * @throws IOException
      */
-    String createAccount(String pswd) throws IOException;
-
-    /**
-     * 生成默认账户的地址
-     * @return
-     */
-    String createDefaultAccountAddress() throws IOException, CipherException;
+    Account createAccount(String pwd) throws IOException, CipherException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException;
 
     /**
      * 获取账户列表
@@ -36,12 +34,26 @@ public interface AccountService {
     List<String> getAccountList() throws IOException;
 
     /**
+     * 获取keyStore内容
+     * @param keyStore
+     * @return
+     */
+    String loadKeyStoreContent(String keyStore);
+
+    /**
      * 解锁账户
      * @param address
      * @param passwd
      * @return
      */
     Boolean unlockAccount(String address, String passwd) throws IOException;
+
+    /**
+     * 账户锁定
+     * @param address
+     * @return
+     */
+    Boolean lockAccount(String address) throws Exception;
 
     /**
      * 获取账户以太余额
@@ -56,6 +68,6 @@ public interface AccountService {
      * @param address
      * @return
      */
-    Uint256 getErc20Balance(String address) throws Exception;
+    JSONObject getErc20Balance(String address, String privateKey) throws Exception;
 
 }

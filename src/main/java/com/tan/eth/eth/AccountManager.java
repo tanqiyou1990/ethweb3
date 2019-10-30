@@ -1,34 +1,32 @@
 package com.tan.eth.eth;
 
-import com.tan.eth.utils.Environment;
+import com.alibaba.fastjson.JSONObject;
+import com.tan.eth.entity.Account;
+import com.tan.eth.utils.RunModel;
+import com.tan.eth.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
+import org.springframework.util.StringUtils;
 import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.admin.Admin;
-import org.web3j.protocol.admin.methods.response.NewAccountIdentifier;
+import org.web3j.protocol.admin.methods.response.BooleanResponse;
 import org.web3j.protocol.admin.methods.response.PersonalListAccounts;
 import org.web3j.protocol.admin.methods.response.PersonalUnlockAccount;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.RemoteCall;
-import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthCall;
-import org.web3j.protocol.core.methods.response.EthGasPrice;
-import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.Contract;
+import org.web3j.protocol.core.Request;
+import org.web3j.protocol.geth.Geth;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Numeric;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -39,22 +37,51 @@ import java.util.concurrent.ExecutionException;
 public class AccountManager {
 
 
+//	/**
+//	 * 创建账号
+//	 */
+//	public static  String createNewAccount(Admin admin, String password) throws IOException {
+//		NewAccountIdentifier newAccountIdentifier = admin.personalNewAccount(password).send();
+//		log.warn(newAccountIdentifier.getRawResponse());
+//		log.warn(newAccountIdentifier.getResult());
+//		String address = newAccountIdentifier.getAccountId();
+//		admin.shutdown();
+//		return address;
+//	}
+
 	/**
-	 * 创建账号
+	 * 生成eth钱包 保存对应的keyStore(无助记词方式)
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws InvalidAlgorithmParameterException
+	 * @throws CipherException
+	 * @throws IOException
 	 */
-	public static  String createNewAccount(Admin admin, String password) throws IOException {
-		NewAccountIdentifier newAccountIdentifier = admin.personalNewAccount(password).send();
-		String address = newAccountIdentifier.getAccountId();
-		admin.shutdown();
-		return address;
-	}
+	public static Account createWallet(String pwd) throws NoSuchAlgorithmException, NoSuchProviderException,
+			InvalidAlgorithmParameterException, CipherException, IOException {
+		File file = new File(RunModel.KEY_STORE_PATH);
+		if(!file.exists()){
+			file.mkdirs();
+		}
+		ECKeyPair ecKeyPair = Keys.createEcKeyPair();
+		if(StringUtils.isEmpty(pwd)){
+			pwd = "";
+		}
+		String fileName = WalletUtils.generateWalletFile(pwd, ecKeyPair, file, false);
+		BigInteger privateKey = ecKeyPair.getPrivateKey();
+		BigInteger publicKey = ecKeyPair.getPublicKey();
 
-	public static String newAddress() throws IOException, CipherException {
-		Credentials credentials = WalletUtils.loadCredentials(Environment.OFFICIAL_ACCOUNT_PSWD,Environment.OFFICIAL_ACCOUNT_KEYSTORE);
+		Credentials credentials = Credentials.create(ecKeyPair);
 		String address = credentials.getAddress();
-		return address;
+		Account wallet = new Account();
+		wallet.setAddress(address);
+		wallet.setPassword(pwd);
+		wallet.setKeyStore(fileName);
+		wallet.setPrivateKey(Numeric.encodeQuantity(privateKey));
+		wallet.setPublicKey(Numeric.encodeQuantity(publicKey));
+		return  wallet;
 	}
-
 
 	/**
 	 * 获取账号列表
@@ -68,6 +95,17 @@ public class AccountManager {
 	}
 
 	/**
+	 * 获取keyStore内容
+	 * @param keyStore
+	 * @return
+     */
+	public static String keyStoreContent(String keyStore) {
+		String filePath = RunModel.KEY_STORE_PATH + File.separator + keyStore;
+		String s = FileUtils.readFileContent(filePath);
+		return s;
+	}
+
+	/**
 	 * 账号解锁
 	 */
 	public static Boolean unlockAccount(Admin admin, String address, String password) throws IOException {
@@ -77,6 +115,20 @@ public class AccountManager {
 		Boolean isUnlocked = personalUnlockAccount.accountUnlocked();
 		admin.shutdown();
 		return isUnlocked;
+	}
+
+	/**
+	 * 锁定账户
+	 * @param geth
+	 * @param address
+	 * @return
+	 * @throws IOException
+     */
+	public static Boolean lockAccount(Geth geth, String address) throws Exception {
+		Request<?, BooleanResponse> booleanResponseRequest = geth.personalLockAccount(address);
+		BooleanResponse response = booleanResponseRequest.send();
+		geth.shutdown();
+		return response.success();
 	}
 
 
@@ -95,23 +147,25 @@ public class AccountManager {
 	/**
 	 * 获取ERC-20 token指定地址余额
 	 *
-	 * @param address         查询地址
+	 * @param privateKey         查询地址私钥
 	 * @return
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public static Uint256 getERC20Balance(Web3j web3j, Address address) throws Exception {
+	public static JSONObject getERC20Balance(Web3j web3j, String privateKey, String address) throws Exception {
 		//加载合约
-		Credentials credentials = WalletUtils.loadCredentials(Environment.OFFICIAL_ACCOUNT_PSWD, Environment.OFFICIAL_ACCOUNT_KEYSTORE);
-		UsdtContract usdt = UsdtContract.load(Environment.CONTRACT_ADDRESS,web3j,credentials, new DefaultGasProvider());
+		Credentials credentials = Credentials.create(privateKey);
+		log.debug("合约地址:{}",RunModel.CONTRACT_ADDRESS);
+		UsdtContract usdt = UsdtContract.load(RunModel.CONTRACT_ADDRESS,web3j,credentials, new DefaultGasProvider());
 		boolean valid = usdt.isValid();
 		if(!valid) {
 			throw new Exception("合约加载失败");
 		}
-		RemoteCall<Uint256> uint256TotalSupply = usdt._totalSupply();
-		log.warn("总发行量:{}",uint256TotalSupply.send().toString());
-		RemoteCall<Uint256> uint256RemoteCall = usdt.balanceOf(address);
-		return uint256RemoteCall.send();
+		Uint256 balanceUint = usdt.balanceOf(new Address(address)).send();
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("value",balanceUint.getValue());
+		jsonObject.put("typeAsString", balanceUint.getTypeAsString());
+		return jsonObject;
 	}
 
 	/**
