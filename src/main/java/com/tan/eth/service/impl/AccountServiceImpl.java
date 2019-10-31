@@ -13,6 +13,7 @@ import org.web3j.protocol.admin.Admin;
 import org.web3j.protocol.geth.Geth;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -57,9 +58,9 @@ public class AccountServiceImpl implements AccountService{
     }
 
     @Override
-    public String getEthBanlance(String address) throws IOException {
+    public BigDecimal getEthBanlance(String address) throws IOException {
         Web3j web3j = ConnectProvider.loadWeb3j();
-        String ethBanlance = AccountManager.getEthBanlance(web3j, address);
+        BigDecimal ethBanlance = AccountManager.getEthBanlance(web3j, address);
         return ethBanlance;
     }
 

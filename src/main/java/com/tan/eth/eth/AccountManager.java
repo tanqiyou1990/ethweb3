@@ -16,8 +16,10 @@ import org.web3j.protocol.admin.methods.response.PersonalListAccounts;
 import org.web3j.protocol.admin.methods.response.PersonalUnlockAccount;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.Request;
+import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.geth.Geth;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
@@ -36,18 +38,6 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class AccountManager {
 
-
-//	/**
-//	 * 创建账号
-//	 */
-//	public static  String createNewAccount(Admin admin, String password) throws IOException {
-//		NewAccountIdentifier newAccountIdentifier = admin.personalNewAccount(password).send();
-//		log.warn(newAccountIdentifier.getRawResponse());
-//		log.warn(newAccountIdentifier.getResult());
-//		String address = newAccountIdentifier.getAccountId();
-//		admin.shutdown();
-//		return address;
-//	}
 
 	/**
 	 * 生成eth钱包 保存对应的keyStore(无助记词方式)
@@ -136,12 +126,13 @@ public class AccountManager {
 	 * 查询以太币账户余额
 	 * @throws IOException
 	 */
-	public static  String getEthBanlance(Web3j web3j,String userAddress) throws IOException {
+	public static  BigDecimal getEthBanlance(Web3j web3j,String userAddress) throws IOException {
 		//获取指定钱包的以太币余额
-		BigInteger integer=web3j.ethGetBalance(userAddress, DefaultBlockParameterName.LATEST).send().getBalance();
+		EthGetBalance balanceWei = web3j.ethGetBalance(userAddress, DefaultBlockParameterName.LATEST).send();
+		BigDecimal balanceInEther = Convert.fromWei(balanceWei.getBalance().toString(), Convert.Unit.ETHER);
+		web3j.shutdown();
 		//eth默认会部18个0这里处理比较随意
-		String decimal = toDecimal(18,integer);
-		return decimal;
+		return balanceInEther;
 	}
 
 	/**
@@ -155,7 +146,6 @@ public class AccountManager {
 	public static JSONObject getERC20Balance(Web3j web3j, String privateKey, String address) throws Exception {
 		//加载合约
 		Credentials credentials = Credentials.create(privateKey);
-		log.debug("合约地址:{}",RunModel.CONTRACT_ADDRESS);
 		UsdtContract usdt = UsdtContract.load(RunModel.CONTRACT_ADDRESS,web3j,credentials, new DefaultGasProvider());
 		boolean valid = usdt.isValid();
 		if(!valid) {
@@ -165,6 +155,7 @@ public class AccountManager {
 		JSONObject jsonObject = new JSONObject();
 		jsonObject.put("value",balanceUint.getValue());
 		jsonObject.put("typeAsString", balanceUint.getTypeAsString());
+		web3j.shutdown();
 		return jsonObject;
 	}
 

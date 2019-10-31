@@ -30,61 +30,6 @@ import java.util.concurrent.ExecutionException;
 public class TransManager {
 
     /**
-     * erc20代币转账
-     *
-     * @param from            转账地址
-     * @param to              收款地址
-     * @param value           转账金额
-     * @param privateKey      转账这私钥
-     * @return 交易哈希
-     * @throws ExecutionException
-     * @throws InterruptedException
-     * @throws IOException
-     */
-    public static String transferERC20Token(Web3j web3j, String from, String to, BigInteger value, String privateKey) throws ExecutionException, InterruptedException, IOException {
-        //加载转账所需的凭证，用私钥
-        Credentials credentials = Credentials.create(privateKey);
-        //获取nonce，交易笔数
-        BigInteger nonce;
-        EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(from, DefaultBlockParameterName.PENDING).send();
-        if (ethGetTransactionCount == null) {
-            return null;
-        }
-        nonce = ethGetTransactionCount.getTransactionCount();
-        //gasPrice和gasLimit 都可以手动设置
-        BigInteger gasPrice;
-        EthGasPrice ethGasPrice = web3j.ethGasPrice().sendAsync().get();
-        if (ethGasPrice == null) {
-            return null;
-        }
-        gasPrice = ethGasPrice.getGasPrice();
-        //BigInteger.valueOf(4300000L) 如果交易失败 很可能是手续费的设置问题
-        BigInteger gasLimit = BigInteger.valueOf(60000L);
-        //ERC20代币合约方法
-        value = value.multiply(value);
-        Function function = new Function(
-                "transfer",
-                Arrays.asList(new Address(to), new Uint256(value)),
-                Collections.singletonList(new TypeReference<Type>() {
-                }));
-        //创建RawTransaction交易对象
-        String encodedFunction = FunctionEncoder.encode(function);
-        RawTransaction rawTransaction = RawTransaction.createTransaction(nonce, gasPrice, gasLimit,
-                RunModel.CONTRACT_ADDRESS, encodedFunction);
-
-        //签名Transaction
-        byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
-        String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
-        EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
-        String hash = ethSendTransaction.getTransactionHash();
-        if (hash != null) {
-            return hash;
-        }
-        return null;
-    }
-
-    /**
      * ERC-20Token交易（调用solidity合约方式） 推荐使用
      *
      * @throws ExecutionException

@@ -8,6 +8,7 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -60,7 +61,7 @@ public interface AccountService {
      * @param address
      * @return
      */
-    String getEthBanlance(String address) throws IOException;
+    BigDecimal getEthBanlance(String address) throws IOException;
 
 
     /**

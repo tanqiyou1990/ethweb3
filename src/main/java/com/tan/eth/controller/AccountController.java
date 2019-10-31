@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.web3j.crypto.CipherException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -55,44 +56,6 @@ public class AccountController {
         }
     }
 
-//    /**
-//     * 获取账户列表
-//     * @return
-//     * @throws IOException
-//     */
-//    @GetMapping("/list")
-//    public ResultEntity list() throws IOException {
-//        List<String> accountList = accountService.getAccountList();
-//        return ResultEntity.success(accountList);
-//    }
-
-
-    /**
-     * 解锁账户
-     * @param address
-     * @param pswd
-     * @return
-     * @throws IOException
-     */
-    @PostMapping("/unlock")
-    public ResultEntity unlock(@RequestParam String address, @RequestParam String pswd) throws IOException {
-        Boolean aBoolean = accountService.unlockAccount(address, pswd);
-        return ResultEntity.success(aBoolean);
-    }
-
-    /**
-     * 锁定账户
-     * @param address
-     * @return
-     * @throws IOException
-     */
-    @PostMapping("/lock")
-    public ResultEntity lock(@RequestParam String address) throws Exception {
-        Boolean aBoolean = accountService.lockAccount(address);
-        return ResultEntity.success(aBoolean);
-    }
-
-
     /**
      * 获取以太币余额
      * @param address
@@ -101,7 +64,7 @@ public class AccountController {
      */
     @GetMapping("/ethbalance/{address}")
     public ResultEntity ethbalance(@PathVariable("address") String address) throws IOException {
-        String banlance = accountService.getEthBanlance(address);
+        BigDecimal banlance = accountService.getEthBanlance(address);
         return ResultEntity.success(banlance);
     }
 
