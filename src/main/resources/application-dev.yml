@@ -4,7 +4,7 @@ server:
 #业务参数
 env:
   key_store_path: "keystore"
-  rpc_url: "http://localhost:6667"
+  rpc_url: "http://47.244.186.179:6667"
   contract_address: "0x6b0b79ee6aeee7f4ff1bedd5999f7cd37c8c7b95"
 
 #安全配置

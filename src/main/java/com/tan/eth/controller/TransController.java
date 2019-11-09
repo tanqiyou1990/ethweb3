@@ -11,10 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
 import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.utils.Convert;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
@@ -65,6 +68,72 @@ public class TransController {
         return ResultEntity.success(transactionReceipt);
     }
 
+    /**
+     *
+     * @param privateKey
+     * @param dstAddress
+     * @param amount    单位ETH
+     * @param gasPrice  单位Gwei
+     * @param gasLimit
+     * @return
+     * @throws Exception
+     */
+   @PostMapping("/usdtIndTrans")
+    public ResultEntity usdtIndTrans(
+            @RequestParam String privateKey,
+            @RequestParam String dstAddress,
+            @RequestParam BigInteger amount,
+            @RequestParam BigDecimal gasPrice,
+            @RequestParam BigInteger gasLimit) throws Exception {
+        BigDecimal prices = Convert.toWei(gasPrice, Convert.Unit.GWEI);
+        TransactionReceipt transactionReceipt = transService.transferUsdt(privateKey, dstAddress, amount, prices.toBigInteger(), gasLimit);
+        return ResultEntity.success(transactionReceipt);
+    }
+
+    /**
+     * ETH转账
+     * @param privateKey
+     * @param dstAddress
+     * @param amount
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/ethTrans")
+    public ResultEntity ethTransDefault(
+            @RequestParam String privateKey,
+            @RequestParam String dstAddress,
+            @RequestParam BigDecimal amount) throws Exception {
+        TransactionReceipt transactionReceipt = transService.transferEth(privateKey,dstAddress,amount);
+        return ResultEntity.success(transactionReceipt);
+    }
+
+    /**
+     * 自定义交易费用转账ETH
+     * @param srcAddress
+     * @param privateKey
+     * @param dstAddress
+     * @param amount    单位 ETH
+     * @param gasPrice  单位 Gwei
+     * @param gasLimit
+     * @return
+     * @throws Exception
+     */
+    @PostMapping("/ethIndTrans")
+    public ResultEntity ethTrans(
+            @RequestParam String srcAddress,
+            @RequestParam String privateKey,
+            @RequestParam String dstAddress,
+            @RequestParam BigDecimal amount,
+            @RequestParam BigDecimal gasPrice,
+            @RequestParam(required = false, defaultValue = "21000") BigInteger gasLimit) throws Exception {
+        BigDecimal value = Convert.toWei(amount, Convert.Unit.ETHER);
+        BigDecimal prices = Convert.toWei(gasPrice, Convert.Unit.GWEI);
+        EthSendTransaction transaction = transService.transferEth(srcAddress, dstAddress, value.toBigInteger(), privateKey, prices.toBigInteger(), gasLimit);
+        if(transaction.getError()!=null){
+            return ResultEntity.failed(transaction.getError().getMessage());
+        }
+        return ResultEntity.success(transaction);
+    }
 
     /**
      * 查询区块信息
