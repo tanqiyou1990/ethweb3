@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @author by Tan
@@ -38,34 +42,30 @@ public class SchedulerTask {
         List<TxRecord> unSendRecords = txRecordMao.findUnSendRecords(20);
         if(unSendRecords != null && unSendRecords.size() > 0){
             List<BathUpdateOptions> bathUpdateOptions = new ArrayList<>();
+            ExecutorService exec= Executors.newCachedThreadPool();
+            ArrayList<Future<TxRecord>> results=new ArrayList<>();
+            //多线程发送
             for(TxRecord item : unSendRecords) {
-                log.warn("==================>發送交易：{}", item.getTxHash());
-                Map<String, String> params = new HashMap<>();
-                params.put("money", item.getAmount().toString());
-                params.put("userAddress", item.getTo());
-                params.put("accounthash", item.getTxHash());
-                String sign = HashKit.sha1(item.getAmount().toString() + "." + item.getTo() + "." + item.getTxHash() + "." + RunModel.TX_SEND_PASS);
-                params.put("sign",sign);
+                results.add(exec.submit(new TxRecordSender(item)));
+            }
+
+            for(Future<TxRecord> fs: results) {
                 try {
-                    Response response = HttpUtil.txSendPost(params);
-                    log.warn("请求返回结果：{}",response.toString());
-                    if(response.isSuccess()){
-                        JSONObject retObj = JSONObject.parseObject(response.toString());
-                        if(retObj.getInteger("status") == 1){
-                            log.warn("发送成功");
-                            //判斷如果發送成功
-                            BathUpdateOptions opts = txRecordMao.getBathUpdateOptions(item.getTxHash());
-                            bathUpdateOptions.add(opts);
-                        }else {
-                            log.warn("发送失败:{}",retObj.getString("msg"));
-                        }
+                    TxRecord txRecord = fs.get();
+                    if(txRecord.getSendFlag()) {
+                        BathUpdateOptions updateOptions = txRecordMao.getBathUpdateOptions(txRecord.getTxHash());
+                        bathUpdateOptions.add(updateOptions);
                     }
-                } catch (UnsupportedEncodingException e) {
-                    log.error("发送交易失败:{}",e.getMessage());
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                }finally {
+                    exec.shutdown();
                 }
             }
+            log.warn("发送成功数量:{}",bathUpdateOptions.size());
             if(bathUpdateOptions.size() > 0) {
-                log.warn("發送成功:{}",bathUpdateOptions.size());
                 txRecordMao.bathUpdateSendFlag(bathUpdateOptions);
             }
         }

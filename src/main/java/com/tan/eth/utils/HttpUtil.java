@@ -103,13 +103,13 @@ public class HttpUtil {
      *
      * @throws Exception
      */
-    public static Response txSendPost(Map<String, String> param) throws UnsupportedEncodingException {
+    public static String txSendPost(Map<String, String> param) throws UnsupportedEncodingException {
         RestTemplate client = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         HttpMethod method = HttpMethod.POST;
         headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
         HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(param, headers);
-        ResponseEntity<Response> exchange = client.exchange(RunModel.TX_SEND_URL, method, requestEntity, Response.class);
+        ResponseEntity<String> exchange = client.exchange(RunModel.TX_SEND_URL, method, requestEntity, String.class);
         System.out.println(exchange.toString());
         return exchange.getBody();
     }
