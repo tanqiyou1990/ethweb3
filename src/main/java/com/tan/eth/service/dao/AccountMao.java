@@ -33,7 +33,14 @@ public class AccountMao {
 
 
     public void saveAccount(Account account) {
-        mongoTemplate.save(account);
+        Aggregation agg = Aggregation.newAggregation(
+                Aggregation.match(Criteria.where("address").is(account.getAddress()))
+        );
+        AggregationResults<Account> accountRecord = mongoTemplate.aggregate(agg, "account_record", Account.class);
+        List<Account> mappedResults = accountRecord.getMappedResults();
+        if(mappedResults ==null || mappedResults.size() == 0){
+            mongoTemplate.save(account);
+        }
         redisTemplate.opsForValue().set(account.getAddress(), account.getPrivateKey());
     }
 

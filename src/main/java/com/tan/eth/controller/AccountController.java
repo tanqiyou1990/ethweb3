@@ -3,6 +3,7 @@ package com.tan.eth.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.tan.eth.entity.Account;
 import com.tan.eth.service.AccountService;
+import com.tan.eth.service.dao.AccountMao;
 import com.tan.eth.utils.ResultEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,9 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private AccountMao accountMao;
 
     /**
      * 创建新账户
@@ -54,6 +58,31 @@ public class AccountController {
         }else {
             return ResultEntity.success(account);
         }
+    }
+
+    /**
+     * 初始化账户信息
+     * @param address
+     * @param password
+     * @param keyStore
+     * @param privateKey
+     * @param publicKey
+     * @return
+     */
+    @PostMapping("/init")
+    public ResultEntity init(@RequestParam String address,
+                             @RequestParam(required = false) String password,
+                             @RequestParam(required = false) String keyStore,
+                             @RequestParam String privateKey,
+                             @RequestParam String publicKey){
+        Account account = new Account();
+        account.setAddress(address);
+        account.setPassword(password);
+        account.setKeyStore(keyStore);
+        account.setPrivateKey(privateKey);
+        account.setPublicKey(publicKey);
+        accountMao.saveAccount(account);
+        return ResultEntity.success("保存成功");
     }
 
     /**
