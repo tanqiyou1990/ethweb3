@@ -15,6 +15,8 @@ public class RunModel {
 
 	public static String RPC_URL;
 
+	public static String SOCKET_URL;
+
 	public static String CONTRACT_ADDRESS;
 
 	public static BigInteger BLOCK_FROM;
@@ -26,6 +28,11 @@ public class RunModel {
 	@Value("${env.key_store_path}")
 	public void setKeyStorePath(String keyStorePath) {
 		RunModel.KEY_STORE_PATH = keyStorePath;
+	}
+
+	@Value("${env.socket_url}")
+	public void setSocketUrl(String socketUrl) {
+		RunModel.SOCKET_URL = socketUrl;
 	}
 
 	@Value("${env.rpc_url}")

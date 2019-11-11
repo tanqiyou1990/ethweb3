@@ -5,8 +5,9 @@ server:
 env:
   key_store_path: "keystore"
   rpc_url: "http://localhost:6666"
+  socket_url: "ws://127.0.0.1:8546"
   contract_address: "0xdac17f958d2ee523a2206206994597c13d831ec7"
-  block_from: "8903284"
+  block_from: 8915057
   tx_send_url: "http://shop.pusd89.com/app.php/index/updateusdt"
   tx_send_pass: "HZDCsU5V"
 
@@ -19,12 +20,12 @@ log:
 spring:
   data:
     mongodb:
-      uri: mongodb://eth:jlw999000@52.82.52.64:27017/ethdb
+      uri: mongodb://127.0.0.1:27017/ethdb
   redis:
     database: 0
-    host: 52.82.52.64
-    port: 6379
-    password: www@2018!
+    host: 127.0.0.1
+    port: 36379
+    password: usdt@2019
     jedis:
       pool:
         max-active: 8

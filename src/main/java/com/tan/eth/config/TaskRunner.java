@@ -13,24 +13,34 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author by Tan
+ * geth --datadir /data --cache 4096 --rpc --rpcport 6666 --rpcapi db,eth,net,web3,personal --ws
  * @create 2019/10/31/031
  */
 @Component
 @Slf4j
 public class TaskRunner implements CommandLineRunner {
 
-    private static String privateKey = "0xaeade09175ddaa09767881c19b1bdde86fd7fcdf914afa35e6d5efceaee665de";
+//    private static String privateKey = "0xaeade09175ddaa09767881c19b1bdde86fd7fcdf914afa35e6d5efceaee665de";
+    private static String privateKey = "0x36df868b834ed0ae946d7fff76014d3786feca84f3bade0be5a29ce12497f621";
 
     @Autowired
     private TxRecordMao txRecordMao;
@@ -60,17 +70,25 @@ public class TaskRunner implements CommandLineRunner {
         if(latestBlockNumber != null){
             blockParameterName = DefaultBlockParameter.valueOf(latestBlockNumber);
         }
-        log.info("========监听高度开始于:{}",latestBlockNumber == null ? "0" : latestBlockNumber.toString());
+        log.info("========监听高度开始于:{}",latestBlockNumber == null ? RunModel.BLOCK_FROM : latestBlockNumber.toString());
 
-        Web3j web3j = ConnectProvider.loadWeb3j();
+
+        Web3j web3j = ConnectProvider.loadWeb3jSocket();
+
+//        EthFilter filter = new EthFilter(blockParameterName, DefaultBlockParameterName.LATEST, RunModel.CONTRACT_ADDRESS);
+//
+//        web3j.ethLogFlowable(filter).subscribe(item -> {
+//            log.warn(item.toString());
+//        });
+
         Credentials credentials = Credentials.create(privateKey);
         UsdtContract contract = UsdtContract.load(RunModel.CONTRACT_ADDRESS, web3j, credentials, new DefaultGasProvider());
         contract.transferEventFlowable(blockParameterName, DefaultBlockParameterName.LATEST)
-                .subscribe(event -> {
-                    BigInteger amount = event.value.getValue();
-                    String srcAccount = event.from.getValue();
-                    String dstAccount = event.to.getValue();
-                    log.debug("from: " + srcAccount + ", to: " + dstAccount + ", value: " + amount);
+                .subscribe(tx -> {
+                    BigInteger amount = tx.value.getValue();
+                    String srcAccount = tx.from.getValue();
+                    String dstAccount = tx.to.getValue();
+//                    log.info("from: " + srcAccount + ", to: " + dstAccount + ", value: " + amount);
 
                     /**
                      * 仅仅监听转入目标账户是平台账户的数据
@@ -81,13 +99,15 @@ public class TaskRunner implements CommandLineRunner {
                         TxRecord r = new TxRecord();
                         r.setFrom(srcAccount);
                         r.setTo(dstAccount);
-                        r.setBlockNumber(event.log.getBlockNumber());
-                        r.setBlockHash(event.log.getBlockHash());
-                        r.setTxHash(event.log.getTransactionHash());
+                        r.setBlockNumber(tx.log.getBlockNumber());
+                        r.setBlockHash(tx.log.getBlockHash());
+                        r.setTxHash(tx.log.getTransactionHash());
                         r.setAmount(amount);
                         r.setSendFlag(false);
                         txRecordMao.saveTxRecord(r);
                     }
+                }, err -> {
+                    log.error(err.getMessage());
                 });
     }
 
