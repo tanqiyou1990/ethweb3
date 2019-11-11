@@ -3,6 +3,8 @@ package com.tan.eth.utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
+
 /**
  * 运行配置项
  */
@@ -14,6 +16,12 @@ public class RunModel {
 	public static String RPC_URL;
 
 	public static String CONTRACT_ADDRESS;
+
+	public static BigInteger BLOCK_FROM;
+
+	public static String TX_SEND_URL;
+
+	public static String TX_SEND_PASS;
 
 	@Value("${env.key_store_path}")
 	public void setKeyStorePath(String keyStorePath) {
@@ -29,4 +37,15 @@ public class RunModel {
 	public void setContractAddress(String contractAddress) {
 		RunModel.CONTRACT_ADDRESS = contractAddress;
 	}
+
+	@Value("${env.block_from}")
+	public void setBlockFrom(BigInteger blockFrom) {
+		RunModel.BLOCK_FROM = blockFrom;
+	}
+
+	@Value("${env.tx_send_url}")
+	public void setTxSendUrl(String txSendUrl) { RunModel.TX_SEND_URL = txSendUrl; }
+
+	@Value("${env.tx_send_pass}")
+	public void setTxSendPass(String txSendPass) { RunModel.TX_SEND_PASS = txSendPass; }
 }

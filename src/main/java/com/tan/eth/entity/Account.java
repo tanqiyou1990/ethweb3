@@ -1,6 +1,7 @@
 package com.tan.eth.entity;
 
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -10,6 +11,7 @@ import java.math.BigInteger;
  * @create 2019/10/30/030
  */
 @Data
+@Document(collection="account_record")
 public class Account implements Serializable {
 
     private static final long serialVersionUID = 1L;

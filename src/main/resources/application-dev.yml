@@ -1,14 +1,34 @@
 server:
   port: 9545
 
+
 #业务参数
 env:
   key_store_path: "keystore"
   rpc_url: "http://47.244.186.179:6667"
   contract_address: "0x6b0b79ee6aeee7f4ff1bedd5999f7cd37c8c7b95"
+  block_from: "1"
+  tx_send_url: "http://pusd.shop.test.lllseo.com/app.php/index/updateusdt"
+  tx_send_pass: "HZDCsU5V"
 
 #安全配置
 api_token: dd3724ee176408d7ef528f9520eb0020a37327ecd0b5d6d3072d32aa1543f95333bd399b17502c232813f09083bff08d8b0b65842b629b18a276b8a1453cdc79
 
 log:
   level: DEBUG
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb://eth:jlw999000@52.82.52.64:27017/ethdb
+  redis:
+    database: 0
+    host: 52.82.52.64
+    port: 6379
+    password: www@2018!
+    pool:
+      max-active: 8
+      max-wait: -1
+      max-idle: 8
+      min-idle: 0
+    timeout: 0

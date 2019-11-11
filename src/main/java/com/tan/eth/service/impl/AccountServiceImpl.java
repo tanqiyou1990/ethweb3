@@ -5,6 +5,8 @@ import com.tan.eth.entity.Account;
 import com.tan.eth.eth.AccountManager;
 import com.tan.eth.eth.ConnectProvider;
 import com.tan.eth.service.AccountService;
+import com.tan.eth.service.dao.AccountMao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.crypto.CipherException;
@@ -25,9 +27,14 @@ import java.util.List;
  */
 @Service
 public class AccountServiceImpl implements AccountService{
+
+    @Autowired
+    private AccountMao accountMao;
+
     @Override
     public Account createAccount(String pwd) throws CipherException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
         Account wallet = AccountManager.createWallet(pwd);
+        accountMao.saveAccount(wallet);
         return wallet;
     }
 
