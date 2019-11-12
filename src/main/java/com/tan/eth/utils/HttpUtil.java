@@ -1,6 +1,8 @@
 package com.tan.eth.utils;
 
 import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
@@ -103,15 +105,13 @@ public class HttpUtil {
      *
      * @throws Exception
      */
-    public static String txSendPost(Map<String, String> param) throws UnsupportedEncodingException {
+    public static String txSendPost(MultiValueMap<String, Object> param) throws UnsupportedEncodingException {
         RestTemplate client = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        HttpMethod method = HttpMethod.POST;
-        headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(param, headers);
-        ResponseEntity<String> exchange = client.exchange(RunModel.TX_SEND_URL, method, requestEntity, String.class);
-        System.out.println(exchange.toString());
-        return exchange.getBody();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(param, headers);
+        ResponseEntity<String> responseEntity = client.postForEntity(RunModel.TX_SEND_URL, requestEntity, String.class);
+        return responseEntity.getBody();
     }
 
 
@@ -169,6 +169,7 @@ public class HttpUtil {
             // 设置通用的请求属性
             conn.setRequestProperty("accept", "*/*");
             conn.setRequestProperty("connection", "Keep-Alive");
+            conn.setRequestProperty("Content-Type","application/x-www-form-urlencoded");
             // 发送POST请求须设置
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);

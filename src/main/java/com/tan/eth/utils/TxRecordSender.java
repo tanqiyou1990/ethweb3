@@ -1,9 +1,14 @@
 package com.tan.eth.utils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tan.eth.entity.TxRecord;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -17,24 +22,24 @@ public class TxRecordSender implements Callable<TxRecord> {
 
 
     private TxRecord record;
-    private Map<String, String> param;
+    private MultiValueMap<String, Object> param;
 
     public TxRecordSender(TxRecord record) {
-        String money = record.getAmount().toString();
+        Float money = record.getAmount().floatValue();
         String userAddress = record.getTo();
         String accounthash = record.getTxHash();
-        Map<String, String> param = new HashMap<>();
-        param.put("money", money);
-        param.put("userAddress",userAddress);
-        param.put("accounthash",accounthash);
-        String sign = HashKit.sha1(money + userAddress + accounthash + RunModel.TX_SEND_PASS);
-        param.put("sign",sign);
-        this.record = record;
+        MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
+        param.add("money", money.toString());
+        param.add("userAddress",userAddress);
+        param.add("accounthash",accounthash);
+        String sign = HashKit.sha1(money.toString() + userAddress + accounthash + RunModel.TX_SEND_PASS);
+        param.add("sign",sign);
         this.param = param;
+        this.record = record;
     }
 
 //    public static void main(String[] args) {
-//        String sign = HashKit.sha1("30x15b342f70f6bdef73f93a55c0a78ba116cbd69840x29f88009e9218afc4d3f938a46f4f9ace0096ff2c2d2da75eab8509c98d7c6cfHZDCsU5V");
+//        String sign = HashKit.sha1("30x7583742d2856422e96c3ee0596806f278df6beae0x29f88009e9218afc4d3f938a46f4f9ace0096ff2c2d2da75eab8509c98d7c6cfHZDCsU5V");
 //        System.out.println(sign);
 //    }
 
