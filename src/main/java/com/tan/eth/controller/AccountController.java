@@ -105,9 +105,8 @@ public class AccountController {
      */
     @GetMapping("/usdtbalance")
     public ResultEntity usdtbalance(
-            @RequestParam String address,
-            @RequestParam String privateKey) throws Exception {
-        JSONObject banlance = accountService.getErc20Balance(address, privateKey);
+            @RequestParam String address) throws Exception {
+        JSONObject banlance = accountService.getErc20Balance(address);
         return ResultEntity.success(banlance);
     }
 

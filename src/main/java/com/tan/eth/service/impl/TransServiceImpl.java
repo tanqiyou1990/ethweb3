@@ -2,7 +2,9 @@ package com.tan.eth.service.impl;
 
 import com.tan.eth.eth.ConnectProvider;
 import com.tan.eth.eth.TransManager;
+import com.tan.eth.service.AccountService;
 import com.tan.eth.service.TransService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
@@ -21,6 +23,7 @@ import java.util.concurrent.ExecutionException;
  */
 @Service
 public class TransServiceImpl implements TransService {
+
     @Override
     public Optional<Transaction> transactionInfoByHash(String hash) throws IOException {
         Web3j web3j = ConnectProvider.loadWeb3j();

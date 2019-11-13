@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Date;
 
 /**
  * @author by Tan
@@ -26,4 +27,6 @@ public class TxRecord implements Serializable {
     private String blockHash;
     private BigInteger blockNumber;
     private Boolean sendFlag;
+    private Long createTime;
+    private Long sendTime;
 }

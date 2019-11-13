@@ -1,6 +1,7 @@
 package com.tan.eth.service.dao;
 
 import com.tan.eth.entity.Account;
+import com.tan.eth.utils.RunModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -10,6 +11,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -33,9 +35,10 @@ public class AccountMao {
         AggregationResults<Account> accountRecord = mongoTemplate.aggregate(agg, "account_record", Account.class);
         List<Account> mappedResults = accountRecord.getMappedResults();
         if(mappedResults ==null || mappedResults.size() == 0){
+            account.setCreateTime(new Date().getTime());
             mongoTemplate.save(account);
         }
-        redisTemplate.opsForValue().set(account.getAddress(), account.getPrivateKey());
+        redisTemplate.opsForValue().set(RunModel.REDIS_ACCOUNT_KEY_PREX + account.getAddress(), account.getPrivateKey());
     }
 
     public List<Account> findAll(){

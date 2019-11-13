@@ -36,7 +36,7 @@ public class SchedulerTask {
     /**
      * 发送交易信息到客户端
      */
-    @Scheduled(fixedDelay = 10000)
+    @Scheduled(fixedDelay = 30000)
     public void sendTxRecords() {
         //载入尚未完成发送的交易信息
         List<TxRecord> unSendRecords = txRecordMao.findUnSendRecords(20);

@@ -13,6 +13,10 @@ public class RunModel {
 
 	public static String KEY_STORE_PATH;
 
+	public static String PUBLIC_PRIVATE_KEY;
+
+	public static String REDIS_ACCOUNT_KEY_PREX;
+
 	public static String RPC_URL;
 
 	public static String SOCKET_URL;
@@ -28,6 +32,16 @@ public class RunModel {
 	@Value("${env.key_store_path}")
 	public void setKeyStorePath(String keyStorePath) {
 		RunModel.KEY_STORE_PATH = keyStorePath;
+	}
+
+	@Value("${env.public_private_key}")
+	public void setPublicPrivateKey(String publicPrivateKey) {
+		RunModel.PUBLIC_PRIVATE_KEY = publicPrivateKey;
+	}
+
+	@Value("${env.redis_account_key_prex}")
+	public void setRedisAccountKeyPrex(String redisAccountKeyPrex) {
+		RunModel.REDIS_ACCOUNT_KEY_PREX = redisAccountKeyPrex;
 	}
 
 	@Value("${env.socket_url}")

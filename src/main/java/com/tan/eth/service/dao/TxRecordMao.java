@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,6 +40,7 @@ public class TxRecordMao {
         Update update = new Update();
         //更新内容
         update.set("sendFlag", true);
+        update.set("sendTime", new Date().getTime());
         options.setUpdate(update);
         return options;
     }
@@ -50,6 +52,7 @@ public class TxRecordMao {
         AggregationResults<TxRecord> tx_record = mongoTemplate.aggregate(agg, "tx_record", TxRecord.class);
         List<TxRecord> mappedResults = tx_record.getMappedResults();
         if(mappedResults == null || mappedResults.size() == 0){
+            record.setCreateTime(new Date().getTime());
             mongoTemplate.save(record);
         }
     }

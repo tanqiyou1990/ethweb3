@@ -72,10 +72,10 @@ public class AccountServiceImpl implements AccountService{
     }
 
     @Override
-    public JSONObject getErc20Balance(String address, String privateKey) throws Exception {
+    public JSONObject getErc20Balance(String address) throws Exception {
         Web3j web3j = ConnectProvider.loadWeb3j();
         Address adr = new Address(address);
-        JSONObject erc20Balance = AccountManager.getERC20Balance(web3j, privateKey, address);
+        JSONObject erc20Balance = AccountManager.getERC20Balance(web3j, address);
         return erc20Balance;
     }
 }

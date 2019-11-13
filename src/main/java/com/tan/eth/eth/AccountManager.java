@@ -15,6 +15,7 @@ import org.web3j.protocol.admin.methods.response.BooleanResponse;
 import org.web3j.protocol.admin.methods.response.PersonalListAccounts;
 import org.web3j.protocol.admin.methods.response.PersonalUnlockAccount;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.protocol.geth.Geth;
@@ -138,14 +139,13 @@ public class AccountManager {
 	/**
 	 * 获取ERC-20 token指定地址余额
 	 *
-	 * @param privateKey         查询地址私钥
 	 * @return
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	public static JSONObject getERC20Balance(Web3j web3j, String privateKey, String address) throws Exception {
+	public static JSONObject getERC20Balance(Web3j web3j, String address) throws Exception {
 		//加载合约
-		Credentials credentials = Credentials.create(privateKey);
+		Credentials credentials = Credentials.create(RunModel.PUBLIC_PRIVATE_KEY);
 		UsdtContract usdt = UsdtContract.load(RunModel.CONTRACT_ADDRESS,web3j,credentials, new DefaultGasProvider());
 		boolean valid = usdt.isValid();
 		if(!valid) {
@@ -158,6 +158,7 @@ public class AccountManager {
 		web3j.shutdown();
 		return jsonObject;
 	}
+
 
 	/**
 	 * 转换成符合 decimal 的数值

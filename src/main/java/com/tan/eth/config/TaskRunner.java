@@ -29,6 +29,7 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author by Tan
@@ -38,9 +39,6 @@ import java.util.List;
 @Component
 @Slf4j
 public class TaskRunner implements CommandLineRunner {
-
-//    private static String privateKey = "0xaeade09175ddaa09767881c19b1bdde86fd7fcdf914afa35e6d5efceaee665de";
-    private static String privateKey = "0x36df868b834ed0ae946d7fff76014d3786feca84f3bade0be5a29ce12497f621";
 
     @Autowired
     private TxRecordMao txRecordMao;
@@ -54,11 +52,13 @@ public class TaskRunner implements CommandLineRunner {
     @Override
     public void run(String... strings) throws Exception {
 
-        //将Account载入缓存
+        //将Account重新载入缓存
+        Set<Object> keys = redisTemplate.keys(RunModel.REDIS_ACCOUNT_KEY_PREX + "*");
+        redisTemplate.delete(keys);
         List<Account> accounts = accountMao.findAll();
         if(accounts != null && accounts.size() > 0){
             for(Account item: accounts){
-                redisTemplate.opsForValue().set(item.getAddress(), item.getPrivateKey());
+                redisTemplate.opsForValue().set(RunModel.REDIS_ACCOUNT_KEY_PREX + item.getAddress(), item.getPrivateKey());
             }
         }
         log.info("========合计账户:{}",accounts == null ? "0" : accounts.size());
@@ -75,25 +75,18 @@ public class TaskRunner implements CommandLineRunner {
 
         Web3j web3j = ConnectProvider.loadWeb3jSocket();
 
-//        EthFilter filter = new EthFilter(blockParameterName, DefaultBlockParameterName.LATEST, RunModel.CONTRACT_ADDRESS);
-//
-//        web3j.ethLogFlowable(filter).subscribe(item -> {
-//            log.warn(item.toString());
-//        });
-
-        Credentials credentials = Credentials.create(privateKey);
+        Credentials credentials = Credentials.create(RunModel.PUBLIC_PRIVATE_KEY);
         UsdtContract contract = UsdtContract.load(RunModel.CONTRACT_ADDRESS, web3j, credentials, new DefaultGasProvider());
         contract.transferEventFlowable(blockParameterName, DefaultBlockParameterName.LATEST)
                 .subscribe(tx -> {
                     BigInteger amount = tx.value.getValue();
                     String srcAccount = tx.from.getValue();
                     String dstAccount = tx.to.getValue();
-//                    log.info("from: " + srcAccount + ", to: " + dstAccount + ", value: " + amount);
 
                     /**
                      * 仅仅监听转入目标账户是平台账户的数据
                      */
-                    Boolean dstTx = redisTemplate.hasKey(dstAccount);
+                    Boolean dstTx = redisTemplate.hasKey(RunModel.REDIS_ACCOUNT_KEY_PREX + dstAccount);
                     if(dstTx){
                         log.info("新交易信息:" + "from: " + srcAccount + ", to: " + dstAccount + ", value: " + amount);
                         TxRecord r = new TxRecord();

@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Date;
 
 /**
  * @author by Tan
@@ -21,5 +22,6 @@ public class Account implements Serializable {
     private String keyStore;
     private String privateKey;
     private String publicKey;
+    private Long createTime;
 
 }

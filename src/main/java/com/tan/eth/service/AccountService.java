@@ -69,6 +69,6 @@ public interface AccountService {
      * @param address
      * @return
      */
-    JSONObject getErc20Balance(String address, String privateKey) throws Exception;
+    JSONObject getErc20Balance(String address) throws Exception;
 
 }
