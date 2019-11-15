@@ -1,23 +1,13 @@
 package com.tan.eth.service;
 
 
-import com.tan.eth.entity.Account;
 import org.springframework.stereotype.Service;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.Transaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.*;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -31,7 +21,7 @@ public interface TransService {
      * @param hash
      * @return
      */
-    Optional<Transaction> transactionInfoByHash(String hash) throws IOException;
+    Transaction transactionInfoByHash(String hash) throws IOException;
 
     /**
      * USDT转账

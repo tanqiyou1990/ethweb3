@@ -29,6 +29,10 @@ public class RunModel {
 
 	public static String TX_SEND_PASS;
 
+	public static BigInteger DEFAULT_GAS_LIMIT;
+
+	public static BigInteger DEFAULT_GAS_PRICE;
+
 	@Value("${env.key_store_path}")
 	public void setKeyStorePath(String keyStorePath) {
 		RunModel.KEY_STORE_PATH = keyStorePath;
@@ -69,4 +73,10 @@ public class RunModel {
 
 	@Value("${env.tx_send_pass}")
 	public void setTxSendPass(String txSendPass) { RunModel.TX_SEND_PASS = txSendPass; }
+
+	@Value("${env.default_gas_limit}")
+	public void setDefaultGasLimit(BigInteger defaultGasLimit) { RunModel.DEFAULT_GAS_LIMIT = defaultGasLimit; }
+
+	@Value("${env.default_gas_price}")
+	public void setDefaultGasPrice(BigInteger defaultGasPrice) { RunModel.DEFAULT_GAS_PRICE = defaultGasPrice; }
 }

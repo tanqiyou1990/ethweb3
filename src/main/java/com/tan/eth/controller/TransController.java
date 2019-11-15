@@ -10,10 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
-import org.web3j.protocol.core.methods.response.EthBlock;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.Transaction;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.utils.Convert;
 
 import java.io.IOException;
@@ -47,7 +44,7 @@ public class TransController {
      */
     @GetMapping("/transInfoByHash/{hash}")
     public ResultEntity transInfoByHash(@PathVariable("hash") String hash){
-        Optional<Transaction> transaction = null;
+        Transaction transaction = null;
         try {
             transaction = transService.transactionInfoByHash(hash);
         } catch (IOException e) {

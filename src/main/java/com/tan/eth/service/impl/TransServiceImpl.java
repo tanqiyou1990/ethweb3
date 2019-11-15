@@ -2,11 +2,8 @@ package com.tan.eth.service.impl;
 
 import com.tan.eth.eth.ConnectProvider;
 import com.tan.eth.eth.TransManager;
-import com.tan.eth.service.AccountService;
 import com.tan.eth.service.TransService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.*;
@@ -14,7 +11,6 @@ import org.web3j.protocol.core.methods.response.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -25,10 +21,10 @@ import java.util.concurrent.ExecutionException;
 public class TransServiceImpl implements TransService {
 
     @Override
-    public Optional<Transaction> transactionInfoByHash(String hash) throws IOException {
+    public Transaction transactionInfoByHash(String hash) throws IOException {
         Web3j web3j = ConnectProvider.loadWeb3j();
-        EthTransaction transactionByHash = TransManager.getTransactionByHash(web3j, hash);
-        return transactionByHash.getTransaction();
+        Transaction transactionByHash = TransManager.getTransactionByHash(web3j, hash);
+        return transactionByHash;
     }
 
     @Override

@@ -1,34 +1,24 @@
 package com.tan.eth.eth;
 
 import com.tan.eth.utils.RunModel;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.admin.Admin;
-import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.methods.response.*;
-import org.web3j.protocol.exceptions.TransactionException;
-import org.web3j.tx.TransactionManager;
 import org.web3j.tx.Transfer;
-import org.web3j.tx.gas.DefaultGasProvider;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -45,7 +35,8 @@ public class TransManager {
      */
     public static TransactionReceipt  transferUsdt(Web3j web3j, String privateKey, String to, BigInteger value) throws Exception {
         Credentials credentials = Credentials.create(privateKey);
-        UsdtContract contract = UsdtContract.load(RunModel.CONTRACT_ADDRESS, web3j, credentials, new DefaultGasProvider());
+        UsdtGasProvider defaultGasProvider = new UsdtGasProvider(RunModel.DEFAULT_GAS_PRICE, RunModel.DEFAULT_GAS_LIMIT);
+        UsdtContract contract = UsdtContract.load(RunModel.CONTRACT_ADDRESS, web3j, credentials, defaultGasProvider);
         TransactionReceipt receipt = contract.transfer(new Address(to), new Uint256(value)).send();
         web3j.shutdown();
         return receipt;
@@ -124,10 +115,12 @@ public class TransManager {
      * @return
      * @throws IOException
      */
-    public static EthTransaction getTransactionByHash(Web3j web3j, String hash) throws IOException {
+    public static Transaction getTransactionByHash(Web3j web3j, String hash) throws IOException {
         EthTransaction send = web3j.ethGetTransactionByHash(hash).send();
+        Optional<Transaction> transaction = send.getTransaction();
+        Transaction tranInfo = transaction.get();
         web3j.shutdown();
-        return send;
+        return tranInfo;
     }
 
 
