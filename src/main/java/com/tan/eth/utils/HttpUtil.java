@@ -101,16 +101,16 @@ public class HttpUtil {
     }
 
     /**
-     * cms API
+     * 发送交易信息给客户端
      *
      * @throws Exception
      */
-    public static String txSendPost(MultiValueMap<String, Object> param) throws UnsupportedEncodingException {
+    public static String txSendPost(MultiValueMap<String, Object> param, String url) {
         RestTemplate client = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(param, headers);
-        ResponseEntity<String> responseEntity = client.postForEntity(RunModel.TX_SEND_URL, requestEntity, String.class);
+        ResponseEntity<String> responseEntity = client.postForEntity(url, requestEntity, String.class);
         return responseEntity.getBody();
     }
 

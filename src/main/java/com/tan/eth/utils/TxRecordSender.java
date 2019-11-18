@@ -7,8 +7,11 @@ import com.tan.eth.entity.TxRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -29,10 +32,20 @@ public class TxRecordSender implements Callable<TxRecord> {
         String userAddress = record.getTo();
         String accounthash = record.getTxHash();
         MultiValueMap<String, Object> param = new LinkedMultiValueMap<>();
-        param.add("money", money.toString());
+        param.add("type",record.getCoin().toString());
+        String moneyStr = null;
+        if(record.getCoin() == 1){
+            moneyStr = money.toString();
+        }
+        if(record.getCoin() == 2){
+            BigDecimal ether = Convert.fromWei(new BigDecimal(record.getAmount()), Convert.Unit.ETHER);
+            DecimalFormat df = new DecimalFormat("0.00000000");
+            moneyStr = NumberUtil.removeZero(df.format(ether));
+        }
+        param.add("money", moneyStr);
         param.add("userAddress",userAddress);
         param.add("accounthash",accounthash);
-        String sign = HashKit.sha1(money.toString() + userAddress + accounthash + RunModel.TX_SEND_PASS);
+        String sign = HashKit.sha1(moneyStr + userAddress + accounthash + RunModel.TX_SEND_PASS);
         param.add("sign",sign);
         this.param = param;
         this.record = record;
@@ -45,8 +58,7 @@ public class TxRecordSender implements Callable<TxRecord> {
 
     @Override
     public TxRecord call() throws Exception {
-        String response = HttpUtil.txSendPost(param);
-        log.warn("请求返回结果：{}",response.toString());
+        String response = HttpUtil.txSendPost(param, RunModel.TX_SEND_URL);
         JSONObject retObj = JSONObject.parseObject(response);
         if(retObj.getInteger("status") == 1){
             log.warn("发送成功");

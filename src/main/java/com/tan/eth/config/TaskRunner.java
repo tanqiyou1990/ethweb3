@@ -7,6 +7,7 @@ import com.tan.eth.eth.UsdtContract;
 import com.tan.eth.service.dao.AccountMao;
 import com.tan.eth.service.dao.TxRecordMao;
 import com.tan.eth.utils.RunModel;
+import io.reactivex.disposables.Disposable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -25,7 +26,9 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.gas.DefaultGasProvider;
+import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -77,30 +80,66 @@ public class TaskRunner implements CommandLineRunner {
 
         Credentials credentials = Credentials.create(RunModel.PUBLIC_PRIVATE_KEY);
         UsdtContract contract = UsdtContract.load(RunModel.CONTRACT_ADDRESS, web3j, credentials, new DefaultGasProvider());
-        contract.transferEventFlowable(blockParameterName, DefaultBlockParameterName.LATEST)
-                .subscribe(tx -> {
-                    BigInteger amount = tx.value.getValue();
-                    String srcAccount = tx.from.getValue();
-                    String dstAccount = tx.to.getValue();
 
+        /**
+         * 监听USDT交易
+         */
+        contract.transferEventFlowable(blockParameterName, DefaultBlockParameterName.LATEST)
+            .subscribe(tx -> {
+                BigInteger amount = tx.value.getValue();
+                String srcAccount = tx.from.getValue();
+                String dstAccount = tx.to.getValue();
+
+                /**
+                 * 仅仅监听转入目标账户是平台账户的数据
+                 */
+                Boolean dstTx = redisTemplate.hasKey(RunModel.REDIS_ACCOUNT_KEY_PREX + dstAccount);
+                if(dstTx){
+                    log.info("新USDT交易信息:" + "from: " + srcAccount + ", to: " + dstAccount + ", value: " + amount);
+                    TxRecord r = new TxRecord();
+                    r.setFrom(srcAccount);
+                    r.setTo(dstAccount);
+                    r.setBlockNumber(tx.log.getBlockNumber());
+                    r.setBlockHash(tx.log.getBlockHash());
+                    r.setTxHash(tx.log.getTransactionHash());
+                    r.setAmount(amount);
+                    r.setCoin(1);
+                    r.setSendFlag(false);
+                    txRecordMao.saveTxRecord(r);
+                }
+            }, err -> {
+                log.error(err.getMessage());
+            });
+
+        /**
+         * 监听以太坊交易
+         */
+        Web3j eb3j = ConnectProvider.loadWeb3jSocket();
+        Disposable ethSubscribe = eb3j.transactionFlowable()
+                .subscribe(etx -> {
+                    String to = etx.getTo();
                     /**
                      * 仅仅监听转入目标账户是平台账户的数据
                      */
-                    Boolean dstTx = redisTemplate.hasKey(RunModel.REDIS_ACCOUNT_KEY_PREX + dstAccount);
-                    if(dstTx){
-                        log.info("新交易信息:" + "from: " + srcAccount + ", to: " + dstAccount + ", value: " + amount);
+                    Boolean dstTx = redisTemplate.hasKey(RunModel.REDIS_ACCOUNT_KEY_PREX + to);
+                    if (dstTx) {
+                        String from = etx.getFrom();
+                        BigInteger value = etx.getValue();
+                        log.info("新以太坊交易信息:" + "from: " + from + ", to: " + to + ", value: " + value.toString());
                         TxRecord r = new TxRecord();
-                        r.setFrom(srcAccount);
-                        r.setTo(dstAccount);
-                        r.setBlockNumber(tx.log.getBlockNumber());
-                        r.setBlockHash(tx.log.getBlockHash());
-                        r.setTxHash(tx.log.getTransactionHash());
-                        r.setAmount(amount);
+                        r.setFrom(from);
+                        r.setTo(to);
+                        r.setBlockNumber(etx.getBlockNumber());
+                        r.setBlockHash(etx.getBlockHash());
+                        r.setTxHash(etx.getHash());
+                        r.setAmount(etx.getValue());
+                        r.setCoin(2);
                         r.setSendFlag(false);
                         txRecordMao.saveTxRecord(r);
                     }
+
                 }, err -> {
-                    log.error(err.getMessage());
+//                    log.error(err.getMessage());
                 });
     }
 

@@ -26,6 +26,10 @@ public class TxRecord implements Serializable {
     private String txHash;
     private String blockHash;
     private BigInteger blockNumber;
+    /**
+     * 转账的币种：1-以太坊;2-USDT
+     */
+    private Integer coin;
     private Boolean sendFlag;
     private Long createTime;
     private Long sendTime;

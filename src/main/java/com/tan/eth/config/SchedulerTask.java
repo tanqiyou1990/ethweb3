@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.tan.eth.entity.TxRecord;
 import com.tan.eth.service.dao.TxRecordMao;
 import com.tan.eth.utils.*;
+import io.reactivex.disposables.Disposable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -31,7 +32,6 @@ public class SchedulerTask {
 
     @Autowired
     private TxRecordMao txRecordMao;
-
 
     /**
      * 发送交易信息到客户端
