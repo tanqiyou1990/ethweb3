@@ -27,10 +27,15 @@ public class TxRecord implements Serializable {
     private String blockHash;
     private BigInteger blockNumber;
     /**
-     * 转账的币种：1-以太坊;2-USDT
+     * 转账的币种：2-以太坊;1-USDT
      */
     private Integer coin;
-    private Boolean sendFlag;
+    /**
+     * 0:待发送
+     * 1:发送成功
+     * -1:发送失败20次后取消发送
+     */
+    private String sendFlag;
     private Long createTime;
     private Long sendTime;
 }

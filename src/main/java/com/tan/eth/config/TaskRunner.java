@@ -52,6 +52,8 @@ public class TaskRunner implements CommandLineRunner {
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
 
+    private static String LATEST_BLOCKNUM = "";
+
     @Override
     public void run(String... strings) throws Exception {
 
@@ -68,7 +70,8 @@ public class TaskRunner implements CommandLineRunner {
 
 
         //检查上次最后监听的区块高度
-        BigInteger latestBlockNumber = txRecordMao.getLatestBlockNumber();
+        Integer latestBlock = (Integer) redisTemplate.opsForValue().get(RunModel.REDIS_LATEST_BLOCK_NUM);
+        BigInteger latestBlockNumber =  BigInteger.valueOf(latestBlock.intValue());
         DefaultBlockParameter blockParameterName = DefaultBlockParameter.valueOf(RunModel.BLOCK_FROM);
         if(latestBlockNumber != null){
             blockParameterName = DefaultBlockParameter.valueOf(latestBlockNumber);
@@ -84,7 +87,7 @@ public class TaskRunner implements CommandLineRunner {
         /**
          * 监听USDT交易
          */
-        contract.transferEventFlowable(blockParameterName, DefaultBlockParameterName.LATEST)
+        contract.transferEventFlowable(blockParameterName,DefaultBlockParameterName.LATEST)
             .subscribe(tx -> {
                 BigInteger amount = tx.value.getValue();
                 String srcAccount = tx.from.getValue();
@@ -104,9 +107,10 @@ public class TaskRunner implements CommandLineRunner {
                     r.setTxHash(tx.log.getTransactionHash());
                     r.setAmount(amount);
                     r.setCoin(1);
-                    r.setSendFlag(false);
+                    r.setSendFlag("0");
                     txRecordMao.saveTxRecord(r);
                 }
+
             }, err -> {
                 log.error(err.getMessage());
             });
@@ -134,10 +138,10 @@ public class TaskRunner implements CommandLineRunner {
                         r.setTxHash(etx.getHash());
                         r.setAmount(etx.getValue());
                         r.setCoin(2);
-                        r.setSendFlag(false);
+                        r.setSendFlag("0");
                         txRecordMao.saveTxRecord(r);
                     }
-
+                    redisTemplate.opsForValue().set(RunModel.REDIS_LATEST_BLOCK_NUM, etx.getBlockNumber());
                 }, err -> {
 //                    log.error(err.getMessage());
                 });

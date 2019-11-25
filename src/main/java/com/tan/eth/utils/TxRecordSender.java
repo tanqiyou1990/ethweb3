@@ -5,6 +5,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tan.eth.entity.TxRecord;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.web3j.utils.Convert;
@@ -24,8 +26,12 @@ import java.util.concurrent.Callable;
 public class TxRecordSender implements Callable<TxRecord> {
 
 
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
+
     private TxRecord record;
     private MultiValueMap<String, Object> param;
+
 
     public TxRecordSender(TxRecord record) {
         Float money = record.getAmount().floatValue();
@@ -61,12 +67,10 @@ public class TxRecordSender implements Callable<TxRecord> {
         String response = HttpUtil.txSendPost(param, RunModel.TX_SEND_URL);
         JSONObject retObj = JSONObject.parseObject(response);
         if(retObj.getInteger("status") == 1){
-            log.warn("发送成功");
-            record.setSendFlag(true);
+            record.setSendFlag("1");
             return record;
         }else {
-            log.warn("发送失败:{}",retObj.getString("msg"));
-            record.setSendFlag(false);
+            record.setSendFlag("0");
             return record;
         }
     }

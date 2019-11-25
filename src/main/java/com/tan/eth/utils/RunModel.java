@@ -1,5 +1,6 @@
 package com.tan.eth.utils;
 
+import jnr.ffi.annotations.In;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,8 @@ public class RunModel {
 
 	public static String REDIS_ACCOUNT_KEY_PREX;
 
+	public static String REDIS_LATEST_BLOCK_NUM;
+
 	public static String RPC_URL;
 
 	public static String SOCKET_URL;
@@ -33,6 +36,8 @@ public class RunModel {
 
 	public static BigInteger DEFAULT_GAS_PRICE;
 
+	public static Integer SEND_FAILD_RETRY_TIMES;
+
 	@Value("${env.key_store_path}")
 	public void setKeyStorePath(String keyStorePath) {
 		RunModel.KEY_STORE_PATH = keyStorePath;
@@ -46,6 +51,11 @@ public class RunModel {
 	@Value("${env.redis_account_key_prex}")
 	public void setRedisAccountKeyPrex(String redisAccountKeyPrex) {
 		RunModel.REDIS_ACCOUNT_KEY_PREX = redisAccountKeyPrex;
+	}
+
+	@Value("${env.redis_latest_block_num}")
+	public void setRedisLatestBlockNum(String redisLatestBlockNum) {
+		RunModel.REDIS_LATEST_BLOCK_NUM = redisLatestBlockNum;
 	}
 
 	@Value("${env.socket_url}")
@@ -79,4 +89,7 @@ public class RunModel {
 
 	@Value("${env.default_gas_price}")
 	public void setDefaultGasPrice(BigInteger defaultGasPrice) { RunModel.DEFAULT_GAS_PRICE = defaultGasPrice; }
+
+	@Value("${env.send_faild_retry_times}")
+	public void setSendFaildRetryTimes(Integer sendFaildRetryTimes) { RunModel.SEND_FAILD_RETRY_TIMES = sendFaildRetryTimes; }
 }

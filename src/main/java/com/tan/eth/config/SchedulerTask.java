@@ -8,6 +8,7 @@ import com.tan.eth.utils.*;
 import io.reactivex.disposables.Disposable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -33,6 +34,11 @@ public class SchedulerTask {
     @Autowired
     private TxRecordMao txRecordMao;
 
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
+
+    private static String SEND_FAILD_TIMES = "SEND_FAILD_TIMES";
+
     /**
      * 发送交易信息到客户端
      */
@@ -52,8 +58,29 @@ public class SchedulerTask {
             for(Future<TxRecord> fs: results) {
                 try {
                     TxRecord txRecord = fs.get();
-                    if(txRecord.getSendFlag()) {
-                        BathUpdateOptions updateOptions = txRecordMao.getBathUpdateOptions(txRecord.getTxHash());
+                    if("0".equals(txRecord.getSendFlag())){
+                        Integer faildTimes = null;
+                        if(redisTemplate.hasKey(SEND_FAILD_TIMES + txRecord.getTxHash())){
+                            faildTimes = (Integer) redisTemplate.opsForValue().get(SEND_FAILD_TIMES + txRecord.getTxHash());
+                        }
+                        if(faildTimes == null){
+                            faildTimes = 1;
+                            redisTemplate.opsForValue().set(SEND_FAILD_TIMES + txRecord.getTxHash(), faildTimes);
+                            txRecord.setSendFlag("0");
+                        }else if(faildTimes < RunModel.SEND_FAILD_RETRY_TIMES) {
+                            faildTimes ++ ;
+                            redisTemplate.opsForValue().set(SEND_FAILD_TIMES + txRecord.getTxHash(), faildTimes);
+                            txRecord.setSendFlag("0");
+                        }else {
+                            txRecord.setSendFlag("-1");
+                            redisTemplate.delete(SEND_FAILD_TIMES + txRecord.getTxHash());
+                        }
+                        log.warn("发送失败:{}",txRecord.getTxHash());
+                        log.warn("发送次数:{}",faildTimes);
+                    }
+
+                    if(!"0".equals(txRecord.getSendFlag())) {
+                        BathUpdateOptions updateOptions = txRecordMao.getBathUpdateOptions(txRecord.getTxHash(),txRecord.getSendFlag());
                         bathUpdateOptions.add(updateOptions);
                     }
                 } catch (InterruptedException e) {
@@ -64,7 +91,6 @@ public class SchedulerTask {
                     exec.shutdown();
                 }
             }
-            log.warn("发送成功数量:{}",bathUpdateOptions.size());
             if(bathUpdateOptions.size() > 0) {
                 txRecordMao.bathUpdateSendFlag(bathUpdateOptions);
             }

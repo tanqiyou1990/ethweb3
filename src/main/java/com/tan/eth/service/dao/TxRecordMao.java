@@ -28,18 +28,18 @@ public class TxRecordMao {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public BathUpdateOptions getBathUpdateOptions(String txHash) {
+    public BathUpdateOptions getBathUpdateOptions(String txHash, String sendFlag) {
         BathUpdateOptions options = new BathUpdateOptions();
         Query query = new Query();
         //查询条件
-        query.addCriteria(Criteria.where("sendFlag").is(false));
+        query.addCriteria(Criteria.where("sendFlag").is("0"));
         query.addCriteria(Criteria.where("txHash").is(txHash));
         options.setQuery(query);
         //mongodb 默认是false,只更新找到的第一条记录，如果这个参数为true,就把按条件查出来多条记录全部更新。
         options.setMulti(true);
         Update update = new Update();
         //更新内容
-        update.set("sendFlag", true);
+        update.set("sendFlag", sendFlag);
         update.set("sendTime", new Date().getTime());
         options.setUpdate(update);
         return options;
@@ -72,32 +72,13 @@ public class TxRecordMao {
      */
     public List<TxRecord> findUnSendRecords(Integer limit) {
         Aggregation agg = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("sendFlag").is(false)),
+                Aggregation.match(Criteria.where("sendFlag").is("0")),
                 Aggregation.sort(Direction.ASC, "blockNumber"),
                 Aggregation.limit(limit)
         );
         AggregationResults<TxRecord> tx_record = mongoTemplate.aggregate(agg, "tx_record", TxRecord.class);
         List<TxRecord> mappedResults = tx_record.getMappedResults();
         return mappedResults;
-    }
-
-    /**
-     * 获取已经监听的最高区块
-     * @return
-     */
-    public BigInteger getLatestBlockNumber() {
-        Aggregation agg = Aggregation.newAggregation(
-                Aggregation.sort(Direction.DESC, "blockNumber"),
-                Aggregation.limit(1)
-        );
-        AggregationResults<TxRecord> tx_records = mongoTemplate.aggregate(agg, "tx_record", TxRecord.class);
-        List<TxRecord> tx_list = tx_records.getMappedResults();
-        if(tx_list != null && tx_list.size() > 0) {
-            TxRecord txRecord = tx_list.get(0);
-            return txRecord.getBlockNumber();
-        }else {
-            return null;
-        }
     }
 
 }

@@ -70,6 +70,7 @@ public class TransController {
         TransactionReceipt transactionReceipt = null;
         try {
             transactionReceipt = transService.transferUsdt(privateKey, dstAddress, amount);
+            log.info("生成交易：{}",transactionReceipt.getTransactionHash());
         } catch (Exception e) {
             return ResultEntity.failed(e.getMessage());
         }
